@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProductVault — Gallery</title>
+
+  <!-- ─── Bootstrap 5 CDN ─── -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- ─── Google Fonts: Playfair Display + DM Sans ─── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ════════════════════════════════════════════
+       CSS CUSTOM PROPERTIES (Design Tokens)
+    ════════════════════════════════════════════ */
+    :root {
+      --navy:      #0f172a;
+      --navy-mid:  #1e293b;
+      --cream:     #faf7f2;
+      --coral:     #e85d4a;
+      --coral-dk:  #c94736;
+      --gold:      #c9983a;
+      --muted:     #64748b;
+      --border:    #e2ddd6;
+      --card-bg:   #ffffff;
+      --font-head: 'Playfair Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+      --shadow-sm: 0 2px 8px rgba(15,23,42,.07);
+      --shadow-md: 0 8px 28px rgba(15,23,42,.12);
+      --shadow-lg: 0 20px 60px rgba(15,23,42,.18);
+      --radius:    12px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ════════════════════════════════════════════
+       BASE
+    ════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--cream);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5 { font-family: var(--font-head); }
+
+    /* ════════════════════════════════════════════
+       NAVBAR
+    ════════════════════════════════════════════ */
+    .site-navbar {
+      background-color: var(--navy) !important;
+      border-bottom: 3px solid var(--coral);
+      padding: 0.75rem 0;
+    }
+
+    .navbar-brand {
+      font-family: var(--font-head);
+      font-size: 1.5rem;
+      color: #fff !important;
+      letter-spacing: -.5px;
+    }
+
+    .navbar-brand span {
+      color: var(--coral);
+    }
+
+    .nav-link {
+      color: rgba(255,255,255,.7) !important;
+      font-size: .875rem;
+      font-weight: 500;
+      letter-spacing: .3px;
+      transition: color var(--transition);
+    }
+
+    .nav-link:hover { color: #fff !important; }
+
+    .navbar-toggler {
+      border-color: rgba(255,255,255,.3);
+    }
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    /* Pill badge in navbar */
+    .product-count-badge {
+      background: var(--coral);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      border-radius: 50px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ════════════════════════════════════════════
+       PAGE HERO / HEADER STRIP
+    ════════════════════════════════════════════ */
+    .page-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+      color: #fff;
+      padding: 3rem 0 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(232,93,74,.12);
+      pointer-events: none;
+    }
+
+    .page-hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      margin-bottom: .4rem;
+    }
+
+    .page-hero p { color: rgba(255,255,255,.6); font-size: .95rem; margin-bottom: 0; }
+
+    /* ════════════════════════════════════════════
+       SECTION LABELS
+    ════════════════════════════════════════════ */
+    .section-label {
+      font-family: var(--font-body);
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--coral);
+      margin-bottom: .5rem;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+      color: var(--navy);
+    }
+
+    /* ════════════════════════════════════════════
+       ALERTS (Loading + Error + Success)
+    ════════════════════════════════════════════ */
+    #alert-container { position: sticky; top: 70px; z-index: 1040; }
+
+    .alert {
+      border: none;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 500;
+    }
+
+    .alert-loading {
+      background: var(--navy-mid);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .alert-success-custom {
+      background: #ecfdf5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .alert-danger-custom {
+      background: #fef2f2;
+      color: #991b1b;
+      border-left: 4px solid var(--coral);
+    }
+
+    /* Spinner inside loading alert */
+    .spinner-sm {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ════════════════════════════════════════════
+       PRODUCT CARD
+    ════════════════════════════════════════════ */
+    .product-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      animation: cardIn .35s ease both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Placeholder image area with a gradient pattern */
+    .card-img-wrap {
+      height: 180px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #e8e2d8 0%, #d5cec2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Use a unique color per card index via CSS custom property */
+    .card-img-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--card-accent, #e85d4a) 0%, transparent 60%);
+      opacity: .15;
+    }
+
+    .card-img-icon {
+      font-size: 3.5rem;
+      opacity: .45;
+      position: relative;
+      z-index: 1;
+      user-select: none;
+    }
+
+    /* Source badge (API vs. Manual) */
+    .source-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: .65rem;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 50px;
+      background: rgba(15,23,42,.55);
+      color: #fff;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-body {
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 1.05rem;
+      color: var(--navy);
+      margin-bottom: .35rem;
+      line-height: 1.3;
+    }
+
+    .card-text {
+      font-size: .8rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+      margin-bottom: .9rem;
+    }
+
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: .75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Price badge */
+    .price-badge {
+      background: var(--navy);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 50px;
+      letter-spacing: .3px;
+    }
+
+    /* Delete button */
+    .btn-delete {
+      background: transparent;
+      border: 1.5px solid #fca5a5;
+      color: #dc2626;
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      letter-spacing: .3px;
+    }
+
+    .btn-delete:hover {
+      background: #dc2626;
+      color: #fff;
+      border-color: #dc2626;
+    }
+
+    /* Empty state */
+    #empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+      display: none;
+    }
+
+    #empty-state .empty-icon { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
+    #empty-state p { max-width: 280px; margin: 0 auto; font-size: .9rem; }
+
+    /* ════════════════════════════════════════════
+       ACTION BAR (Load Sample + count)
+    ════════════════════════════════════════════ */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .product-counter {
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .product-counter strong {
+      color: var(--navy);
+    }
+
+    /* Load Sample Products button */
+    .btn-load {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: .5rem 1.25rem;
+      border-radius: 50px;
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .4px;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .btn-load:hover:not(:disabled) {
+      background: var(--navy-mid);
+      transform: translateY(-1px);
+    }
+
+    .btn-load:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    /* ════════════════════════════════════════════
+       ADD PRODUCT FORM SECTION
+    ════════════════════════════════════════════ */
+    .form-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-section .section-label { margin-bottom: .25rem; }
+
+    .form-label {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      color: var(--navy-mid);
+      margin-bottom: .35rem;
+    }
+
+    .form-control {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: .875rem;
+      color: var(--navy);
+      padding: .55rem .85rem;
+      background: var(--cream);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .form-control:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(232,93,74,.15);
+      background: #fff;
+      outline: none;
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+    }
+
+    .invalid-feedback {
+      font-size: .75rem;
+      color: #dc2626;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      background: var(--coral);
+      color: #fff;
+      border: none;
+      padding: .6rem 2rem;
+      border-radius: 50px;
+      font-family: var(--font-body);
+      font-size: .875rem;
+      font-weight: 600;
+      letter-spacing: .4px;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+
+    .btn-submit:hover {
+      background: var(--coral-dk);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232,93,74,.35);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    /* ════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════ */
+    .site-footer {
+      background: var(--navy);
+      color: rgba(255,255,255,.4);
+      text-align: center;
+      font-size: .78rem;
+      padding: 1.5rem 0;
+      margin-top: 4rem;
+    }
+
+    .site-footer a { color: var(--coral); text-decoration: none; }
+
+    /* ════════════════════════════════════════════
+       RESPONSIVE TWEAKS
+    ════════════════════════════════════════════ */
+    @media (max-width: 576px) {
+      .form-section { padding: 1.25rem; }
+      .page-hero { padding: 2rem 0 1.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════
+       NAVBAR (Bootstrap Component)
+  ══════════════════════════════════════════ -->
+  <nav class="navbar navbar-expand-lg site-navbar">
+    <div class="container">
+
+      <!-- Brand -->
+      <a class="navbar-brand" href="#">
+        Product<span>Vault</span>
+      </a>
+
+      <!-- Mobile toggler -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNav"
+        aria-controls="mainNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Nav links -->
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              Gallery
+              <!-- Live product count badge in navbar -->
+              <span class="product-count-badge" id="nav-count">3</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#add-product-section">Add Product</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       PAGE HERO
+  ══════════════════════════════════════════ -->
+  <section class="page-hero">
+    <div class="container">
+      <p class="section-label" style="color:var(--coral);">Curated Collection</p>
+      <h1>Product Gallery</h1>
+      <p>Browse, manage, and add products in real time.</p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       ALERT CONTAINER (for loading / errors)
+  ══════════════════════════════════════════ -->
+  <div class="container mt-3">
+    <div id="alert-container"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       GALLERY SECTION
+  ══════════════════════════════════════════ -->
+  <main class="container my-4">
+
+    <!-- Action bar: counter + Load Sample Products button -->
+    <div class="action-bar">
+      <p class="product-counter mb-0">
+        Showing <strong id="product-count">3</strong> product(s)
+      </p>
+      <button class="btn-load" id="load-sample-btn" onclick="loadSampleProducts()">
+        ⬇ Load Sample Products
+      </button>
+    </div>
+
+    <!-- Empty state (shown when no products exist) -->
+    <div id="empty-state">
+      <span class="empty-icon">📭</span>
+      <h5>No products yet</h5>
+      <p>Use the form below to add your first product!</p>
+    </div>
+
+    <!-- ── Product grid ──
+         Bootstrap responsive grid: 1 col on mobile, 3 cols on desktop
+    ── -->
+    <div class="row g-4" id="product-grid">
+      <!-- Cards injected here by JavaScript -->
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════
+       ADD NEW PRODUCT FORM SECTION
+  ══════════════════════════════════════════ -->
+  <section class="container my-5" id="add-product-section">
+    <div class="form-section">
+
+      <p class="section-label">Manage Inventory</p>
+      <h2 class="section-title" style="font-size:1.4rem;">Add New Product</h2>
+
+      <form id="add-product-form" novalidate>
+        <div class="row g-3">
+
+          <!-- Product Name -->
+          <div class="col-md-6">
+            <label for="input-name" class="form-label">Product Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="input-name"
+              placeholder="e.g. Wireless Headphones"
+              required
+              minlength="2"
+            />
+            <div class="invalid-feedback">Please enter a product name (at least 2 characters).</div>
+          </div>
+
+          <!-- Product Price -->
+          <div class="col-md-6">
+            <label for="input-price" class="form-label">Price (PKR)</label>
+            <input
+              type="number"
+              class="form-control"
+              id="input-price"
+              placeholder="e.g. 4999"
+              required
+              min="0"
+              step="0.01"
+            />
+            <div class="invalid-feedback">Please enter a valid price (0 or more).</div>
+          </div>
+
+          <!-- Product Description -->
+          <div class="col-12">
+            <label for="input-desc" class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              id="input-desc"
+              rows="3"
+              placeholder="Briefly describe the product..."
+              required
+              minlength="5"
+            ></textarea>
+            <div class="invalid-feedback">Please add a description (at least 5 characters).</div>
+          </div>
+
+          <!-- Submit button -->
+          <div class="col-12 d-flex justify-content-end">
+            <button type="submit" class="btn-submit">
+              + Add to Gallery
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container">
+      ProductVault &mdash; Interactive Gallery &nbsp;|&nbsp; Built with Bootstrap 5
+    </div>
+  </footer>
+
+
+  <!-- ══════════════════════════════════════════
+       Bootstrap 5 JS Bundle (includes Popper)
+  ══════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <!-- ══════════════════════════════════════════
+       APPLICATION JAVASCRIPT (ES6+)
+  ══════════════════════════════════════════ -->
+  <script>
+    /* ─────────────────────────────────────────────────────────────────
+       1. DATA — Initial product array (3 default products)
+          Each product: { id, name, price, description, source, icon }
+    ───────────────────────────────────────────────────────────────── */
+    let products = [
+      {
+        id: 1,
+        name: 'Mechanical Keyboard',
+        price: 8500,
+        description: 'Tactile RGB mechanical keyboard with Cherry MX switches and PBT keycaps for a premium typing feel.',
+        source: 'manual',
+        icon: '⌨️',
+      },
+      {
+        id: 2,
+        name: 'Noise-Cancelling Buds',
+        price: 6200,
+        description: 'True wireless earbuds with active noise cancellation, 30 hr battery life, and IPX5 water resistance.',
+        source: 'manual',
+        icon: '🎧',
+      },
+      {
+        id: 3,
+        name: 'Portable Desk Lamp',
+        price: 1850,
+        description: 'USB-C rechargeable touch-controlled lamp with 3 colour temperatures and stepless dimming.',
+        source: 'manual',
+        icon: '💡',
+      },
+    ];
+
+    /* Monotonic ID counter so each new product gets a unique ID */
+    let nextId = 4;
+
+    /* Accent colours cycled through for each card's image area */
+    const CARD_ACCENTS = ['#e85d4a', '#c9983a', '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       2. RENDER — Dynamically build cards from the products array
+          Uses: Arrow functions, Array.map()
+    ───────────────────────────────────────────────────────────────── */
+    const renderGallery = () => {
+      const grid       = document.getElementById('product-grid');
+      const emptyState = document.getElementById('empty-state');
+      const countEl    = document.getElementById('product-count');
+      const navCount   = document.getElementById('nav-count');
+
+      /* Update counters */
+      countEl.textContent  = products.length;
+      navCount.textContent = products.length;
+
+      /* Toggle empty-state visibility */
+      emptyState.style.display = products.length === 0 ? 'block' : 'none';
+
+      /* Build all card HTML strings, then join and inject */
+      grid.innerHTML = products
+        .map((product, index) => {
+          const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
+          const formattedPrice = Number(product.price).toLocaleString('en-PK');
+          return `
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="product-card">
+
+                <!-- Image placeholder with coloured accent overlay -->
+                <div class="card-img-wrap" style="--card-accent: ${accent};">
+                  <span class="card-img-icon">${product.icon || '📦'}</span>
+                  <span class="source-badge">
+                    ${product.source === 'api' ? '🌐 API' : '✏️ Manual'}
+                  </span>
+                </div>
+
+                <div class="card-body">
+                  <h5 class="card-title">${escapeHtml(product.name)}</h5>
+                  <p class="card-text">${escapeHtml(product.description)}</p>
+
+                  <div class="card-footer-row">
+                    <!-- Price badge (Bootstrap badge) -->
+                    <span class="price-badge">PKR ${formattedPrice}</span>
+
+                    <!-- Delete button — passes product.id to deleteProduct() -->
+                    <button
+                      class="btn-delete"
+                      onclick="deleteProduct(${product.id})"
+                      aria-label="Delete ${escapeHtml(product.name)}"
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    };
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       3. DELETE — Remove a product by ID using Array.filter()
+          Uses: Arrow function, filter method
+    ───────────────────────────────────────────────────────────────── */
+    const deleteProduct = (productId) => {
+      /* filter() returns a new array excluding the deleted product */
+      products = products.filter((p) => p.id !== productId);
+      renderGallery();
+      showAlert('Product removed from gallery.', 'danger');
+    };
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       4. FORM VALIDATION & ADD PRODUCT
+          Uses: Arrow function, spread operator to add new product
+    ───────────────────────────────────────────────────────────────── */
+    const addProductForm = document.getElementById('add-product-form');
+
+    addProductForm.addEventListener('submit', (event) => {
+      event.preventDefault();   // Prevent default browser submission
+
+      const nameInput  = document.getElementById('input-name');
+      const priceInput = document.getElementById('input-price');
+      const descInput  = document.getElementById('input-desc');
+
+      /* ── Manual validation ── */
+      let isValid = true;
+
+      if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+        nameInput.classList.add('is-invalid');
+        isValid = false;
+      } else {
+        nameInput.classList.remove('is-invalid');
+      }
+
+      if (priceInput.value === '' || Number(priceInput.value) < 0) {
+        priceInput.classList.add('is-invalid');
+        isValid = false;
+      } else {
+        priceInput.classList.remove('is-invalid');
+      }
+
+      if (!descInput.value.trim() || descInput.value.trim().length < 5) {
+        descInput.classList.add('is-invalid');
+        isValid = false;
+      } else {
+        descInput.classList.remove('is-invalid');
+      }
+
+      if (!isValid) return;  // Abort if any field is invalid
+
+      /* ── Build new product object ── */
+      const newProduct = {
+        id:          nextId++,
+        name:        nameInput.value.trim(),
+        price:       parseFloat(priceInput.value),
+        description: descInput.value.trim(),
+        source:      'manual',
+        icon:        '📦',
+      };
+
+      /* ── Add to array using spread operator ── */
+      products = [...products, newProduct];
+
+      /* ── Re-render and reset form ── */
+      renderGallery();
+      addProductForm.reset();
+      showAlert(`"${newProduct.name}" added to the gallery!`, 'success');
+    });
+
+    /* Clear validation styles on input so user gets immediate feedback */
+    ['input-name', 'input-price', 'input-desc'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', function () {
+        this.classList.remove('is-invalid');
+      });
+    });
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       5. ASYNC / AWAIT — Fake API call to load 2 sample products
+          Uses: async/await, setTimeout (simulated fetch), try/catch
+    ───────────────────────────────────────────────────────────────── */
+
+    /**
+     * Simulates a network request that resolves after 1 second.
+     * Returns an array of 2 sample product objects.
+     */
+    const fakeFetchProducts = () =>
+      new Promise((resolve, reject) => {
+        setTimeout(() => {
+          /* Uncomment the line below to test the catch block: */
+          // reject(new Error('Network timeout — server unreachable.'));
+
+          resolve([
+            {
+              id:          nextId++,
+              name:        'Smart Water Bottle',
+              price:       2300,
+              description: 'Tracks hydration with LED reminders. BPA-free stainless steel, 750 ml capacity.',
+              source:      'api',
+              icon:        '💧',
+            },
+            {
+              id:          nextId++,
+              name:        'Foldable Laptop Stand',
+              price:       1650,
+              description: 'Aluminium alloy stand, 6-angle adjustable, folds flat for travel. Fits 10–17" devices.',
+              source:      'api',
+              icon:        '💻',
+            },
+          ]);
+        }, 1000);  // Simulate 1-second server delay
+      });
+
+    /**
+     * Called when user clicks "Load Sample Products".
+     * Shows loading indicator → awaits fake fetch → updates gallery.
+     */
+    const loadSampleProducts = async () => {
+      const loadBtn = document.getElementById('load-sample-btn');
+
+      /* Disable button to prevent double-clicking */
+      loadBtn.disabled = true;
+      loadBtn.textContent = 'Loading…';
+
+      /* Show loading alert */
+      showLoadingAlert('Fetching sample products from the server…');
+
+      try {
+        /* await the fake async fetch */
+        const newProducts = await fakeFetchProducts();
+
+        /* Append fetched products using spread operator */
+        products = [...products, ...newProducts];
+
+        renderGallery();
+        dismissAlert();
+        showAlert(`${newProducts.length} sample products loaded successfully!`, 'success');
+
+      } catch (error) {
+        /* Handle any errors gracefully */
+        dismissAlert();
+        showAlert(`Failed to load products: ${error.message}`, 'danger');
+        console.error('Load error:', error);
+
+      } finally {
+        /* Re-enable button regardless of success or failure */
+        loadBtn.disabled = false;
+        loadBtn.innerHTML = '⬇ Load Sample Products';
+      }
+    };
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       6. UTILITY — Alert helper functions
+    ───────────────────────────────────────────────────────────────── */
+    let alertTimer = null;
+
+    /**
+     * Renders a dismissible Bootstrap-style alert.
+     * @param {string} message - Text to display
+     * @param {'success'|'danger'} type  - Visual style
+     */
+    const showAlert = (message, type = 'success') => {
+      const container  = document.getElementById('alert-container');
+      const cssClass   = type === 'success' ? 'alert-success-custom' : 'alert-danger-custom';
+      const icon       = type === 'success' ? '✅' : '⚠️';
+
+      container.innerHTML = `
+        <div class="alert ${cssClass} d-flex align-items-center justify-content-between" role="alert">
+          <span>${icon} &nbsp;${escapeHtml(message)}</span>
+          <button type="button" class="btn-close btn-close-sm" onclick="dismissAlert()" aria-label="Close"></button>
+        </div>
+      `;
+
+      /* Auto-dismiss after 4 seconds */
+      clearTimeout(alertTimer);
+      alertTimer = setTimeout(dismissAlert, 4000);
+    };
+
+    /** Shows a special "loading" alert without auto-dismiss */
+    const showLoadingAlert = (message) => {
+      const container = document.getElementById('alert-container');
+      container.innerHTML = `
+        <div class="alert alert-loading" role="status" aria-live="polite">
+          <span class="spinner-sm"></span>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      `;
+    };
+
+    /** Clears the alert container */
+    const dismissAlert = () => {
+      document.getElementById('alert-container').innerHTML = '';
+      clearTimeout(alertTimer);
+    };
+
+    /**
+     * Escapes HTML special characters to prevent XSS.
+     * @param {string} str
+     * @returns {string}
+     */
+    const escapeHtml = (str) => {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(str).replace(/[&<>"']/g, (ch) => map[ch]);
+    };
+
+
+    /* ─────────────────────────────────────────────────────────────────
+       7. INIT — Render the initial 3 products on page load
+    ───────────────────────────────────────────────────────────────── */
+    renderGallery();
+
+  </script>
+</body>
+</html>
